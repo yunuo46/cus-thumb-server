@@ -74,5 +74,5 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-  - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local',
+  - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
   - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-remote'
