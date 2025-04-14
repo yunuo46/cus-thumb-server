@@ -1,8 +1,8 @@
 availableSecrets:
   secretManager:
-    - versionName: projects/582289918705/secrets/APPLICATION/versions/latest
+    - versionName: projects/782806232816/secrets/APPLICATION/versions/latest
       env: SECRET_ENV_LOCAL
-    - versionName: projects/582289918705/secrets/APPLICATION-REMOTE/versions/latest
+    - versionName: projects/782806232816/secrets/APPLICATION-REMOTE/versions/latest
       env: SECRET_ENV_REMOTE
 
 steps:
