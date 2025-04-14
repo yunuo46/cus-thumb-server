@@ -31,7 +31,7 @@ steps:
     entrypoint: gcloud
     args:
       [
-        "run", "deploy", "planpal-server-local",
+        "run", "deploy", "custhumb-server-local",
         "--image", "asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local",
         "--region", "asia-northeast3",
         "--platform", "managed",
@@ -63,7 +63,7 @@ steps:
     entrypoint: gcloud
     args:
       [
-        "run", "deploy", "planpal-server-remote",
+        "run", "deploy", "custhumb-server-remote",
         "--image",  "asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-remote",
         "--region", "asia-northeast3",
         "--platform", "managed",

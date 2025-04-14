@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class PlanpalApplication {
+public class CusthumbApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(PlanpalApplication.class, args);
+		SpringApplication.run(CusthumbApplication.class, args);
 	}
 
 }

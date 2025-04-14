@@ -24,17 +24,17 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("planpal REST API")
+                        .title("custhumb REST API")
                         .version("1.0")
-                        .description("planpal REST API 명세서입니다."));
+                        .description("custhumb REST API 명세서입니다."));
     }
 
     @Bean
     public GroupedOpenApi api() {
         String[] paths = {"/api/**"};
-        String[] packagesToScan = {"com.gdg.planpal.domain"};
+        String[] packagesToScan = {"com.zolp.custhumb.domain"};
         return GroupedOpenApi.builder()
-                .group("planpal-openapi")
+                .group("custhumb-openapi")
                 .pathsToMatch(paths)
                 .packagesToScan(packagesToScan)
                 .build();
