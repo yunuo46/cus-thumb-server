@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spring Security 권한 관리</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Spring Security 권한 관리</h1>
+    <button id="google-login" class="btn btn-primary">Google 로그인</button>
+</div>
+
+<script>
+    $('#google-login').click(function () {
+        const clientId = '582289918705-qu8jo0j5ptf36tthb2jaidepgacrrijf.apps.googleusercontent.com';
+        const redirectUri = encodeURIComponent('http://localhost:3000/oauth/google/callback');
+        const responseType = 'code';
+        const scope = encodeURIComponent('openid profile email');
+
+        const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
+
+        window.location.href = authUrl;
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        if (window.location.pathname === '/oauth/google/callback') {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+
+            if (code) {
+                // code를 다시 백엔드 POST로 전달
+                $.ajax({
+                    url: '/api/auth/google',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ authorizationCode: code  }),
+                    success: function (response) {
+                        alert('로그인 성공: ' + JSON.stringify(response));
+                    },
+                    error: function (xhr, status, error) {
+                        alert('로그인 실패: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>
