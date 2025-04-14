@@ -1,8 +1,8 @@
-📦 custhumb-server
-AI 기반 자동 썸네일 생성 서비스의 백엔드 서버입니다.
-Spring Boot 기반 REST API이며, Google Cloud Platform(GCP)의 Cloud Run과 Cloud Build를 이용해 서버리스 배포됩니다.
+### 📦 custhumb-server
+AI 기반 자동 썸네일 생성 서비스의 백엔드 서버
+Spring Boot 기반 REST API이며, Google Cloud Platform(GCP)의 Cloud Run과 Cloud Build를 이용해 서버리스 배포
 
-🌐 주요 기술 스택
+### 🌐 주요 기술 스택
 Backend: Spring Boot, Gradle
 
 Infra: Google Cloud Run (Serverless), Artifact Registry, Cloud Build
