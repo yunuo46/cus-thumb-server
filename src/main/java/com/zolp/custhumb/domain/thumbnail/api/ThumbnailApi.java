@@ -1,0 +1,37 @@
+package com.zolp.custhumb.domain.thumbnail.api;
+
+import com.zolp.custhumb.domain.thumbnail.application.ThumbnailService;
+import com.zolp.custhumb.domain.thumbnail.dto.request.CreateThumbnailRequest;
+import com.zolp.custhumb.domain.thumbnail.dto.request.EditThumbnailRequest;
+import com.zolp.custhumb.domain.thumbnail.dto.response.ThumbnailResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/thumbnails")
+@Tag(name = "썸네일 API", description = "썸네일 생성 및 편집 API")
+public class ThumbnailApi {
+    private final ThumbnailService thumbnailService;
+
+    @PostMapping
+    @Operation(summary = "썸네일 생성", description = "프론트에서 받은 썸네일 URL과 선택된 테마 ID 리스트를 기반으로 썸네일을 생성합니다.")
+    public ResponseEntity<ThumbnailResponse> createThumbnail(@RequestBody CreateThumbnailRequest request,
+                                                             @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId) {
+        ThumbnailResponse response = thumbnailService.create(request, userId);
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/edit")
+    @Operation(summary = "썸네일 편집", description = "기존 썸네일을 편집합니다.")
+    public ResponseEntity<ThumbnailResponse> editThumbnail(@PathVariable Long id,
+                                                           @RequestBody EditThumbnailRequest request) {
+        ThumbnailResponse response = thumbnailService.edit(id, request);
+        return ResponseEntity.ok(response);
+    }
+}
