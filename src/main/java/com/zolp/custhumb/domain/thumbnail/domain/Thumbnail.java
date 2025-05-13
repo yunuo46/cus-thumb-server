@@ -5,6 +5,7 @@ import com.zolp.custhumb.domain.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ public class Thumbnail {
     @Column(columnDefinition = "TEXT")
     private String url;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "thumbnail_thema",
             joinColumns = @JoinColumn(name = "thumbnail_id"),
@@ -39,6 +40,9 @@ public class Thumbnail {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
     public void updateUrl(String url) {
         this.url = url;

@@ -19,17 +19,15 @@ import java.util.List;
 public class ThumbnailService {
 
     private final ThumbnailRepository thumbnailRepository;
-    private final ThemaRepository themaRepository;
     private final UserRepository userRepository;
 
     public ThumbnailResponse create(CreateThumbnailRequest request, Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
-        List<Thema> themas = themaRepository.findAllById(request.themaIds());
 
+        // AI 연동 전까지는 썸네일 URL을 빈 문자열로 설정
         Thumbnail thumbnail = Thumbnail.builder()
-                .url(request.url())
+                .url("https://dummy.thumbnail.jpg")
                 .user(user)
-                .themas(themas)
                 .build();
 
         Thumbnail saved = thumbnailRepository.save(thumbnail);
@@ -38,7 +36,8 @@ public class ThumbnailService {
 
     public ThumbnailResponse edit(Long id, EditThumbnailRequest request) {
         Thumbnail thumbnail = thumbnailRepository.findById(id).orElseThrow();
-        thumbnail.updateUrl(request.newUrl());
+        String newURL = "https://new-dummy.thumbnail.jpg";
+        thumbnail.updateUrl(newURL);
         return new ThumbnailResponse(thumbnail.getId(), thumbnail.getUrl());
     }
 }

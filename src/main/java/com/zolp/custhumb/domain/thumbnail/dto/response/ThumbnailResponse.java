@@ -8,6 +8,6 @@ public record ThumbnailResponse(
         @Schema(description = "썸네일 ID")
         Long id,
 
-        @Schema(description = "썸네일 이미지 URL", example = "https://storage.googleapis.com/bucket/final.jpg")
+        @Schema(description = "썸네일 이미지 URL")
         String url
 ) {}

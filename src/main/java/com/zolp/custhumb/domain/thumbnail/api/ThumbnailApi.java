@@ -20,7 +20,7 @@ public class ThumbnailApi {
     private final ThumbnailService thumbnailService;
 
     @PostMapping
-    @Operation(summary = "썸네일 생성", description = "프론트에서 받은 썸네일 URL과 선택된 테마 ID 리스트를 기반으로 썸네일을 생성합니다.")
+    @Operation(summary = "썸네일 생성", description = "프론트에서 받은 비디오와 이미지URL과 프롬프트들을 기반으로 썸네일을 생성합니다.")
     public ResponseEntity<ThumbnailResponse> createThumbnail(@RequestBody CreateThumbnailRequest request,
                                                              @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId) {
         ThumbnailResponse response = thumbnailService.create(request, userId);
