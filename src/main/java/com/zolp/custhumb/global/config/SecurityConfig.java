@@ -43,8 +43,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((registry) ->
                         registry
-                                .requestMatchers("/api/**").permitAll()
-                                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**").permitAll()
+                                .requestMatchers("/api/**","/oauth/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**","/index.html").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class);;
