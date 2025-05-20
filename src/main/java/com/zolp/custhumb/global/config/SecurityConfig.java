@@ -54,7 +54,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests((registry) ->
                         registry
-                                .requestMatchers("/api/**","/oauth/**").permitAll()
+                                .requestMatchers("/api/auth/**","/oauth/**").permitAll()
                                 .requestMatchers("/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**","/index.html").permitAll()
                                 .anyRequest().authenticated()
                 )

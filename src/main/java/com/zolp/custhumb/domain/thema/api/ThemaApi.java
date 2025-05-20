@@ -5,6 +5,7 @@ import com.zolp.custhumb.domain.thema.dto.request.ThemaRequest;
 import com.zolp.custhumb.domain.thema.dto.response.ThemaResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/themas")
+@SecurityRequirement(name = "accessToken")
 @Tag(name = "테마 API", description = "사용자 테마 등록 및 조회 API")
 public class ThemaApi {
     private final ThemaService themaService;
