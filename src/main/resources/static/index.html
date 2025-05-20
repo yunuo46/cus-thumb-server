@@ -2,51 +2,84 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Spring Security 권한 관리</title>
+    <title>Presigned URL 테스트</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 </head>
 <body>
 <div class="container">
-    <h1>Spring Security 권한 관리</h1>
+    <h1>Google OAuth 로그인</h1>
     <button id="google-login" class="btn btn-primary">Google 로그인</button>
+
+    <hr>
+
+    <h2>📤 Presigned URL 테스트</h2>
+
+    <div class="form-group">
+        <label>파일 선택 (Video)</label>
+        <input type="file" id="videoFile" accept="video/*" class="form-control">
+        <button id="uploadVideoBtn" class="btn btn-success">영상 업로드</button>
+    </div>
+
+    <div class="form-group">
+        <label>파일 선택 (Image)</label>
+        <input type="file" id="imageFile" accept="image/*" class="form-control">
+        <button id="uploadImageBtn" class="btn btn-success">이미지 업로드</button>
+    </div>
 </div>
 
 <script>
     $('#google-login').click(function () {
         const clientId = '782806232816-4n74niupirb3c6cdarr0gthv2ulnp059.apps.googleusercontent.com';
         const redirectUri = encodeURIComponent('http://localhost:8080/oauth/google/callback');
-        const responseType = 'code';
         const scope = encodeURIComponent('openid profile email');
-
-        const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`;
-
+        const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
         window.location.href = authUrl;
     });
-</script>
 
-<script>
-    $(document).ready(function () {
-        if (window.location.pathname === '/oauth/google/callback') {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-
-            if (code) {
-                // code를 다시 백엔드 POST로 전달
-                $.ajax({
-                    url: '/api/auth/google',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ authorizationCode: code  }),
-                    success: function (response) {
-                        alert('로그인 성공: ' + JSON.stringify(response));
-                    },
-                    error: function (xhr, status, error) {
-                        alert('로그인 실패: ' + xhr.responseText);
-                    }
-                });
-            }
+    function uploadFile(api, file, contentType) {
+        if (!file) {
+            alert("파일을 선택하세요.");
+            return;
         }
+
+        const fileName = encodeURIComponent(file.name);
+
+        $.ajax({
+            url: `/api/upload/${api}?fileName=${fileName}`,
+            type: 'GET',
+            success: function (presignedUrl) {
+                fetch(presignedUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': contentType
+                    },
+                    body: file
+                }).then(response => {
+                    if (response.ok) {
+                        alert(`${api} 업로드 성공`);
+                    } else {
+                        alert(`${api} 업로드 실패: ` + response.statusText);
+                    }
+                }).catch(error => {
+                    console.error(error);
+                    alert("업로드 중 오류 발생");
+                });
+            },
+            error: function () {
+                alert("Presigned URL 발급 실패");
+            }
+        });
+    }
+
+    $('#uploadVideoBtn').click(() => {
+        const file = document.getElementById('videoFile').files[0];
+        uploadFile('video', file, 'video/mp4');
+    });
+
+    $('#uploadImageBtn').click(() => {
+        const file = document.getElementById('imageFile').files[0];
+        uploadFile('image', file, 'image/png');
     });
 </script>
 </body>

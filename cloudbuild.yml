@@ -4,6 +4,8 @@ availableSecrets:
       env: SECRET_ENV_LOCAL
     - versionName: projects/782806232816/secrets/APPLICATION-REMOTE/versions/latest
       env: SECRET_ENV_REMOTE
+    - versionName: projects/782806232816/secrets/GCS-KEY/versions/latest
+      env: SECRET_ENV_KEY
 
 steps:
   # 🔹 1. LOCAL 서비스용 secret 파일 생성 + 빌드 + 배포
@@ -13,7 +15,8 @@ steps:
       - '-c'
       - |
         echo "$$SECRET_ENV_LOCAL" > src/main/resources/secret.yml
-    secretEnv: ['SECRET_ENV_LOCAL']
+        echo "$$SECRET_ENV_KEY" > src/main/resources/custhumb.json
+    secretEnv: ['SECRET_ENV_LOCAL','SECRET_ENV_KEY']
 
   - name: gradle:8.5-jdk21
     args: [ 'gradle','build' ]
@@ -44,7 +47,8 @@ steps:
       - '-c'
       - |
         echo "$$SECRET_ENV_REMOTE" > src/main/resources/secret.yml
-    secretEnv: ['SECRET_ENV_REMOTE']
+        echo "$$SECRET_ENV_KEY" > src/main/resources/custhumb.json
+    secretEnv: [ 'SECRET_ENV_REMOTE','SECRET_ENV_KEY' ]
 
   - name: gradle:8.5-jdk21
     args: [ 'gradle','build' ]
