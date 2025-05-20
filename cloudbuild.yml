@@ -20,12 +20,12 @@ steps:
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t',
-           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-local/custhumb-local',
+           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local',
            '.']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push',
-           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-local/custhumb-local']
+           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local']
 
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
@@ -34,7 +34,7 @@ steps:
         'compute', 'instances', 'update-container',
         'custhumb-local-instance',
         '--zone', 'asia-northeast3-c',
-        '--container-image', 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-local/custhumb-local'
+        '--container-image', 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
       ]
 
   # 🔹 2. REMOTE 서비스용 secret 파일 생성 + 빌드 + 배포
