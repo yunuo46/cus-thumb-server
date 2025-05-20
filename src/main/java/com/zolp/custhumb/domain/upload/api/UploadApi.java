@@ -1,5 +1,6 @@
 package com.zolp.custhumb.domain.upload.api;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/upload")
+@SecurityRequirement(name = "accessToken")
 @Tag(name = "업로드 API", description = "GCP Presigned URL 발급 API")
 public class UploadApi {
     //private final VideoService videoService;

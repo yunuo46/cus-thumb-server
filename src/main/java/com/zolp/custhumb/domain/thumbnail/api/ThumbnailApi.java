@@ -6,6 +6,7 @@ import com.zolp.custhumb.domain.thumbnail.dto.request.EditThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.response.ThumbnailResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/thumbnails")
+@SecurityRequirement(name = "accessToken")
 @Tag(name = "썸네일 API", description = "썸네일 생성 및 편집 API")
 public class ThumbnailApi {
     private final ThumbnailService thumbnailService;
