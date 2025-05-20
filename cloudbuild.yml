@@ -15,7 +15,7 @@ steps:
         echo "$$SECRET_ENV_LOCAL" > src/main/resources/secret.yml
     secretEnv: ['SECRET_ENV_LOCAL']
 
-  - name: gradle:7.6-jdk21
+  - name: gradle:8.5-jdk21
     args: [ 'gradle','build' ]
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -46,7 +46,7 @@ steps:
         echo "$$SECRET_ENV_REMOTE" > src/main/resources/secret.yml
     secretEnv: ['SECRET_ENV_REMOTE']
 
-  - name: gradle:7.6-jdk17
+  - name: gradle:8.5-jdk21
     args: [ 'gradle','build' ]
 
   - name: 'gcr.io/cloud-builders/docker'
