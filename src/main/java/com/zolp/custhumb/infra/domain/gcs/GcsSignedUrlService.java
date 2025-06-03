@@ -24,8 +24,14 @@ public class GcsSignedUrlService {
                 .getService();
     }
 
-    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes) {
-        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, objectName))
+    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes, Long userId, String timestamp) {
+        String[] parts = objectName.split("/", 2);
+        String type = parts[0];
+        String fileName = parts.length > 1 ? parts[1] : "unknown";
+
+        String fullPath = String.format("%d/%s/%s_%s", userId, type, timestamp, fileName);
+
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, fullPath))
                 .setContentType(contentType)
                 .build();
 

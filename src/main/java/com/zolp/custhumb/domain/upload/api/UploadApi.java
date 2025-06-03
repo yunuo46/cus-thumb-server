@@ -1,5 +1,6 @@
 package com.zolp.custhumb.domain.upload.api;
 
+import com.zolp.custhumb.domain.upload.application.UploadService;
 import com.zolp.custhumb.domain.upload.dto.response.UploadResponse;
 import com.zolp.custhumb.infra.domain.gcs.GcsSignedUrlService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,19 +19,19 @@ import java.net.URL;
 @Tag(name = "업로드 API", description = "GCP Presigned URL 발급 API")
 public class UploadApi {
 
-    private final GcsSignedUrlService gcsSignedUrlService;
+    private final UploadService uploadService;
 
-    private static final String BUCKET_NAME = "custhumb-bucket"; // 🔁 실제 GCS 버킷 이름으로 교체
+    private static final String BUCKET_NAME = "custhumb-bucket";
 
     @GetMapping("/video")
     public ResponseEntity<UploadResponse> getVideoPresignedUrl(@AuthenticationPrincipal Long userId, @RequestParam String fileName) {
-        URL url = gcsSignedUrlService.generateUploadUrl(BUCKET_NAME, fileName, "video/mp4", 15);
-        return ResponseEntity.ok(new UploadResponse(userId, url.toString()));
+        UploadResponse response = uploadService.generateVideoAndTextUrls(userId, fileName, BUCKET_NAME);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/image")
     public ResponseEntity<UploadResponse> getImagePresignedUrl(@AuthenticationPrincipal Long userId, @RequestParam String fileName) {
-        URL url = gcsSignedUrlService.generateUploadUrl(BUCKET_NAME, fileName, "image/png", 5);
-        return ResponseEntity.ok(new UploadResponse(userId, url.toString()));
+        UploadResponse response = uploadService.generateImageAndTextUrls(userId, fileName, BUCKET_NAME);
+        return ResponseEntity.ok(response);
     }
 }
