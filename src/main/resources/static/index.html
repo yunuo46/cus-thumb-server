@@ -29,6 +29,35 @@
 </div>
 
 <script>
+    // ✅ accessToken JSON 응답 파싱 (리다이렉트 직후 실행)
+    window.onload = function () {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+
+        if (code) {
+            // code를 이용해서 백엔드에 accessToken 요청
+            $.ajax({
+                url: "/api/auth/google",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ authorizationCode: code }),
+                success: function (data) {
+                    if (data.accessToken) {
+                        localStorage.setItem("accessToken", "Bearer " + data.accessToken);
+                        alert("로그인 성공! accessToken 저장 완료.");
+                        // query string 제거 후 메인 리디렉트
+                        window.history.replaceState({}, document.title, "/");
+                    } else {
+                        alert("accessToken이 없습니다.");
+                    }
+                },
+                error: function () {
+                    alert("accessToken 요청 실패");
+                }
+            });
+        }
+    };
+
     $('#google-login').click(function () {
         const clientId = '782806232816-4n74niupirb3c6cdarr0gthv2ulnp059.apps.googleusercontent.com';
         const redirectUri = encodeURIComponent('http://localhost:8080/oauth/google/callback');
@@ -37,37 +66,75 @@
         window.location.href = authUrl;
     });
 
+    function getAccessToken() {
+        return localStorage.getItem("accessToken");
+    }
+
+    function getTimestamp() {
+        const now = new Date();
+        const pad = n => n.toString().padStart(2, '0');
+        return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    }
+
     function uploadFile(api, file, contentType) {
         if (!file) {
             alert("파일을 선택하세요.");
             return;
         }
 
-        const fileName = encodeURIComponent(file.name);
+        const token = getAccessToken();
+        if (!token) {
+            alert("Access token이 없습니다. 먼저 로그인 해주세요.");
+            return;
+        }
 
+        // Step 1: userId 얻기용 dummy presigned 요청
         $.ajax({
-            url: `/api/upload/${api}?fileName=${fileName}`,
+            url: `/api/upload/${api}?fileName=dummy`,
             type: 'GET',
-            success: function (presignedUrl) {
-                fetch(presignedUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': contentType
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            },
+            success: function (res) {
+                const userId = res.userId;
+                const timestamp = getTimestamp();
+                const originalName = file.name;
+                const objectName = `${userId}/${api}/${timestamp}_${originalName}`;
+                const encodedName = encodeURIComponent(objectName);
+
+                // Step 2: presigned URL 재요청
+                $.ajax({
+                    url: `/api/upload/${api}?fileName=${encodedName}`,
+                    type: 'GET',
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("Authorization", token);
                     },
-                    body: file
-                }).then(response => {
-                    if (response.ok) {
-                        alert(`${api} 업로드 성공`);
-                    } else {
-                        alert(`${api} 업로드 실패: ` + response.statusText);
+                    success: function (urlRes) {
+                        const presignedUrl = urlRes.url;
+                        fetch(presignedUrl, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': contentType
+                            },
+                            body: file
+                        }).then(response => {
+                            if (response.ok) {
+                                alert(`${api} 업로드 성공\n경로: ${objectName}`);
+                            } else {
+                                alert(`${api} 업로드 실패: ` + response.statusText);
+                            }
+                        }).catch(error => {
+                            console.error(error);
+                            alert("업로드 중 오류 발생");
+                        });
+                    },
+                    error: function () {
+                        alert("Presigned URL 재요청 실패");
                     }
-                }).catch(error => {
-                    console.error(error);
-                    alert("업로드 중 오류 발생");
                 });
             },
             error: function () {
-                alert("Presigned URL 발급 실패");
+                alert("userId 조회 실패");
             }
         });
     }
