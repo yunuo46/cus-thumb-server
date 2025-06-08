@@ -1,18 +1,20 @@
 package com.zolp.custhumb.domain.thumbnail.application;
 
-import com.zolp.custhumb.domain.thema.dao.ThemaRepository;
-import com.zolp.custhumb.domain.thema.domain.Thema;
 import com.zolp.custhumb.domain.thumbnail.dao.ThumbnailRepository;
 import com.zolp.custhumb.domain.thumbnail.domain.Thumbnail;
-import com.zolp.custhumb.domain.thumbnail.dto.request.CreateThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.request.EditThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.response.ThumbnailResponse;
 import com.zolp.custhumb.domain.user.dao.UserRepository;
 import com.zolp.custhumb.domain.user.domain.User;
+import com.zolp.custhumb.infra.domain.gcs.GcsSignedUrlService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -20,13 +22,30 @@ public class ThumbnailService {
 
     private final ThumbnailRepository thumbnailRepository;
     private final UserRepository userRepository;
+    private final GcsSignedUrlService gcsSignedUrlService;
 
-    public ThumbnailResponse create(CreateThumbnailRequest request, Long userId) {
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+    private static final String BUCKET_NAME = "custhumb-bucket";
+
+    public ThumbnailResponse create(Long userId) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        // AI 연동 전까지는 썸네일 URL을 빈 문자열로 설정
+        String timestamp = LocalDateTime.now().format(FORMATTER);
+        String thumbnailObject = "thumbnail/" + ".png";
+
+        URL thumbnailUploadUrl = gcsSignedUrlService.generateUploadUrl(BUCKET_NAME, thumbnailObject, "image/png", 15, userId, timestamp);
+
+        Map<String, Object> data = gcsSignedUrlService.getEarliestMediaData(String.valueOf(userId));
+        String thumbnailUrl = gcsSignedUrlService.requestThumbnailToAiServer(
+                (String) data.get("videoUrl"),
+                (String) data.get("videoPrompt"),
+                (String) data.get("imageUrl"),
+                (String) data.get("imagePrompt"),
+                thumbnailUploadUrl.toString()
+        );
+
         Thumbnail thumbnail = Thumbnail.builder()
-                .url("https://dummy.thumbnail.jpg")
+                .url(thumbnailUrl)
                 .user(user)
                 .build();
 

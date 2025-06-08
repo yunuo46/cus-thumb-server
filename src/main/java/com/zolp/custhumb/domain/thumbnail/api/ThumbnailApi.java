@@ -1,7 +1,6 @@
 package com.zolp.custhumb.domain.thumbnail.api;
 
 import com.zolp.custhumb.domain.thumbnail.application.ThumbnailService;
-import com.zolp.custhumb.domain.thumbnail.dto.request.CreateThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.request.EditThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.response.ThumbnailResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,17 +21,15 @@ public class ThumbnailApi {
     private final ThumbnailService thumbnailService;
 
     @PostMapping
-    @Operation(summary = "썸네일 생성", description = "프론트에서 받은 비디오와 이미지URL과 프롬프트들을 기반으로 썸네일을 생성합니다.")
-    public ResponseEntity<ThumbnailResponse> createThumbnail(@RequestBody CreateThumbnailRequest request,
-                                                             @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId) {
-        ThumbnailResponse response = thumbnailService.create(request, userId);
+    @Operation(summary = "썸네일 생성", description = " 클라우드 스토리지에 저장된 비디오와 이미지URL과 프롬프트들을 기반으로 썸네일을 생성합니다.")
+    public ResponseEntity<ThumbnailResponse> createThumbnail(@Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId) {
+        ThumbnailResponse response = thumbnailService.create(userId);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/edit")
     @Operation(summary = "썸네일 편집", description = "기존 썸네일을 편집합니다.")
-    public ResponseEntity<ThumbnailResponse> editThumbnail(@PathVariable Long id,
-                                                           @RequestBody EditThumbnailRequest request) {
+    public ResponseEntity<ThumbnailResponse> editThumbnail(@PathVariable Long id, @RequestBody EditThumbnailRequest request) {
         ThumbnailResponse response = thumbnailService.edit(id, request);
         return ResponseEntity.ok(response);
     }
