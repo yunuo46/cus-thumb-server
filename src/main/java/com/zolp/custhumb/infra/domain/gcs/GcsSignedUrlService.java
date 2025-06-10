@@ -12,11 +12,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -61,9 +59,16 @@ public class GcsSignedUrlService {
         );
     }
 
-    public String requestThumbnailToAiServer(String videoUrl, String videoPrompt, String imageUrl, String imagePrompt, String thumbnailUploadUrl) {
+    public String requestThumbnailToAiServer(String videoUrl, String videoPrompt, String imageUrl, String imagePrompt, String thumbnailUploadUrl, Long userId) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
+
+            System.out.println(videoUrl);
+            System.out.println(videoPrompt);
+            System.out.println(imageUrl);
+            System.out.println(imagePrompt);
+            System.out.println(thumbnailUploadUrl);
+
             Map<String, String> requestBody = Map.of(
                     "video_url", videoUrl,
                     "video_prompt", videoPrompt,
@@ -82,14 +87,24 @@ public class GcsSignedUrlService {
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            JsonNode responseJson = objectMapper.readTree(response.body());
-            return responseJson.get("thumbnail_url").asText();
+            return findLatestThumbnailUrl(userId);
         } catch (Exception e) {
             throw new RuntimeException("AI 서버 요청 실패", e);
         }
     }
 
-    public Map<String, Object> getEarliestMediaData(String userId) {
+    private String findLatestThumbnailUrl(Long userId) {
+        String prefix = userId.toString() + "/thumbnail/";
+        List<Blob> blobs = listBlobs("custhumb-bucket", prefix);
+
+        return blobs.stream()
+                .filter(blob -> blob.getName().endsWith(".png"))
+                .max(Comparator.comparing(blob -> extractTimestamp(blob.getName())))
+                .map(blob -> buildPublicUrl(blob.getName()))
+                .orElseThrow(() -> new RuntimeException("썸네일 PNG 파일이 없습니다."));
+    }
+
+    public Map<String, Object> getLatestMediaData(String userId) {
         List<Blob> videoBlobs = listBlobs("custhumb-bucket", userId + "/video/");
         List<Blob> imageBlobs = listBlobs("custhumb-bucket", userId + "/image/");
 
@@ -129,7 +144,7 @@ public class GcsSignedUrlService {
     private String findEarliestByTimestamp(List<Blob> blobs, String extension) {
         return blobs.stream()
                 .filter(blob -> blob.getName().endsWith("." + extension))
-                .min(Comparator.comparing(blob -> extractTimestamp(blob.getName())))
+                .max(Comparator.comparing(blob -> extractTimestamp(blob.getName())))
                 .map(blob -> blob.getName().substring(blob.getName().lastIndexOf("/") + 1))
                 .orElseThrow(() -> new RuntimeException("해당 형식의 파일이 없습니다."));
     }

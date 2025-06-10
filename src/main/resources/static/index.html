@@ -13,6 +13,11 @@
 
     <hr>
 
+    <h2>🖼️ 썸네일 생성</h2>
+    <button id="createThumbnailBtn" class="btn btn-warning">썸네일 생성 요청</button>
+
+    <hr>
+
     <h2>📤 Presigned URL 테스트</h2>
 
     <div class="form-group">
@@ -179,6 +184,31 @@
         const file = document.getElementById('imageFile').files[0];
         const prompt = document.getElementById('imagePrompt').value.trim();
         uploadImageWithText(file, prompt);
+    });
+
+    $('#createThumbnailBtn').click(() => {
+        const token = getAccessToken();
+
+        if (!token) {
+            alert("accessToken이 없습니다. 먼저 로그인하세요.");
+            return;
+        }
+
+        $.ajax({
+            url: "/api/thumbnails",
+            method: "POST",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            },
+            success: function (res) {
+                console.log("썸네일 생성 결과:", res);
+                alert("썸네일 생성 성공!");
+            },
+            error: function (err) {
+                console.error(err);
+                alert("썸네일 생성 실패: " + (err.responseJSON?.message || err.statusText));
+            }
+        });
     });
 
 </script>

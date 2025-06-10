@@ -14,7 +14,6 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,19 +34,22 @@ public class ThumbnailService {
 
         URL thumbnailUploadUrl = gcsSignedUrlService.generateUploadUrl(BUCKET_NAME, thumbnailObject, "image/png", 15, userId, timestamp);
 
-        Map<String, Object> data = gcsSignedUrlService.getEarliestMediaData(String.valueOf(userId));
+        Map<String, Object> data = gcsSignedUrlService.getLatestMediaData(String.valueOf(userId));
         String thumbnailUrl = gcsSignedUrlService.requestThumbnailToAiServer(
                 (String) data.get("videoUrl"),
                 (String) data.get("videoPrompt"),
                 (String) data.get("imageUrl"),
                 (String) data.get("imagePrompt"),
-                thumbnailUploadUrl.toString()
+                thumbnailUploadUrl.toString(),
+                userId
         );
 
         Thumbnail thumbnail = Thumbnail.builder()
                 .url(thumbnailUrl)
                 .user(user)
                 .build();
+
+        System.out.println(thumbnailUrl);
 
         Thumbnail saved = thumbnailRepository.save(thumbnail);
         return new ThumbnailResponse(saved.getId(), saved.getUrl());
