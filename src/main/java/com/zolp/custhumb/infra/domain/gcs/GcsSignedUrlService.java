@@ -1,6 +1,5 @@
 package com.zolp.custhumb.infra.domain.gcs;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
@@ -22,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import com.google.cloud.storage.Blob;
 
 @Service
 public class GcsSignedUrlService {
@@ -69,20 +69,16 @@ public class GcsSignedUrlService {
         );
     }
 
-    public String requestThumbnailToAiServer(String videoUrl, String videoPrompt, String thumbnailUploadUrl, String type, Long userId) {
+    public List<String> requestThumbnailToAiServer(String videoUrl, String videoPrompt, List<String> thumbnailUploadUrls, List<String> referenceImageTypes, Long userId) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
 
-            System.out.println(videoUrl);
-            System.out.println(videoPrompt);
-            System.out.println(thumbnailUploadUrl);
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("video_url", videoUrl);
+            requestBody.put("video_prompt", videoPrompt);
+            requestBody.put("reference_image_types", referenceImageTypes);
+            requestBody.put("thumbnail_upload_urls", thumbnailUploadUrls);
 
-            Map<String, String> requestBody = Map.of(
-                    "video_url", videoUrl,
-                    "video_prompt", videoPrompt,
-                    "reference_image_type", type,
-                    "thumbnail_upload_url", thumbnailUploadUrl
-            );
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
 
@@ -93,12 +89,15 @@ public class GcsSignedUrlService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                     .build();
 
-            client.send(request, HttpResponse.BodyHandlers.ofString());
-            return findLatestThumbnailUrl(userId);
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("AI 서버 응답 상태 코드: " + response.statusCode());
+
+            return findLatestThreeThumbnailUrls(userId);
         } catch (Exception e) {
-            throw new RuntimeException("AI 서버 요청 실패", e);
+            throw new RuntimeException("AI 서버 썸네일 생성 요청 실패", e);
         }
     }
+
 
     public String requestThumbnailEditToAiServer(String originalThumbnailUrl, String prompt, String newThumbnailUploadUrl, Long userId) {
         try {
@@ -127,9 +126,22 @@ public class GcsSignedUrlService {
         }
     }
 
+
+    public List<String> findLatestThreeThumbnailUrls(Long userId) {
+        String prefix = userId.toString() + "/thumbnail/";
+        List<Blob> blobs = listBlobs(gcsBucketName, prefix);
+
+        return blobs.stream()
+                .filter(blob -> blob.getName().endsWith(".png"))
+                .sorted(Comparator.comparing((Blob blob) -> extractTimestamp(blob.getName())).reversed())
+                .limit(3)
+                .map(blob -> buildPublicUrl(blob.getName()))
+                .collect(Collectors.toList());
+    }
+
     private String findLatestThumbnailUrl(Long userId) {
         String prefix = userId.toString() + "/thumbnail/";
-        List<Blob> blobs = listBlobs("custhumb-bucket", prefix);
+        List<Blob> blobs = listBlobs(gcsBucketName, prefix);
 
         return blobs.stream()
                 .filter(blob -> blob.getName().endsWith(".png"))

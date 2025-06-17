@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "썸네일 편집 요청 DTO")
 public record EditThumbnailRequest(
-        @Schema(description = "원본 썸네일 url")
+        @Schema(description = "원본 썸네일 id")
         @NotBlank
-        String url,
+        Long id,
 
         @Schema(description = "편집 요청 프롬프트")
         @NotBlank

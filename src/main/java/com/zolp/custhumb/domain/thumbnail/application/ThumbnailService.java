@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,37 +33,59 @@ public class ThumbnailService {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
-    public ThumbnailResponse create(Long userId, CreateThumbnailRequest createThumbnailRequest) {
+    public List<ThumbnailResponse> create(Long userId, CreateThumbnailRequest createThumbnailRequest) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        String timestamp = LocalDateTime.now().format(FORMATTER);
-        String thumbnailObject = "thumbnail/" + ".png";
+        String baseTimestamp = LocalDateTime.now().format(FORMATTER);
+        int numberOfThumbnailsToGenerate = createThumbnailRequest.types().size();
 
-        URL thumbnailUploadUrl = gcsSignedUrlService.generateUploadUrl(gcsBucketName, thumbnailObject, "image/png", 15, userId, timestamp);
+        List<String> thumbnailUploadUrls = new ArrayList<>();
+
+        for (int i = 0; i < numberOfThumbnailsToGenerate; i++) {
+            // 각 썸네일마다 고유한 이름을 주기 위해 인덱스를 포함
+            String objectName = String.format("thumbnail/%d/thumbnail__%s_%d.png", userId, baseTimestamp, i);
+
+            URL uploadUrl = gcsSignedUrlService.generateUploadUrl(
+                    gcsBucketName,
+                    objectName,
+                    "image/png",
+                    15,
+                    userId,
+                    baseTimestamp
+            );
+            thumbnailUploadUrls.add(uploadUrl.toString());
+        }
 
         Map<String, Object> data = gcsSignedUrlService.getLatestMediaData(String.valueOf(userId));
-        String thumbnailUrl = gcsSignedUrlService.requestThumbnailToAiServer(
+        List<String> thumbnailUrls = gcsSignedUrlService.requestThumbnailToAiServer(
                 (String) data.get("videoUrl"),
                 (String) data.get("videoPrompt"),
-                thumbnailUploadUrl.toString(),
-                createThumbnailRequest.type(),
+                thumbnailUploadUrls,
+                createThumbnailRequest.types(),
                 userId
         );
 
-        Thumbnail thumbnail = Thumbnail.builder()
-                .url(thumbnailUrl)
-                .user(user)
-                .build();
+        List<ThumbnailResponse> responses = new ArrayList<>();
 
-        System.out.println(thumbnailUrl);
+        for (String url : thumbnailUrls) {
+            Thumbnail thumbnail = Thumbnail.builder()
+                    .url(url)
+                    .user(user)
+                    .build();
 
-        Thumbnail saved = thumbnailRepository.save(thumbnail);
-        return new ThumbnailResponse(saved.getId(), saved.getUrl());
+            System.out.println("생성 및 저장될 썸네일 URL: " + url); // Log each URL
+
+            Thumbnail saved = thumbnailRepository.save(thumbnail);
+            responses.add(new ThumbnailResponse(saved.getId(), saved.getUrl()));
+        }
+        return responses;
     }
 
     public ThumbnailResponse edit(Long userId, EditThumbnailRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        String url = thumbnailRepository.findById(request.id()).orElseThrow().getUrl();
 
         String timestamp = LocalDateTime.now().format(FORMATTER);
         String thumbnailObject = "thumbnail/" + ".png";
@@ -77,7 +100,7 @@ public class ThumbnailService {
         );
 
         String newThumbnailUrl = gcsSignedUrlService.requestThumbnailEditToAiServer(
-                request.url(),
+                url,
                 request.prompt(),
                 newThumbnailUploadUrl.toString(),
                 userId

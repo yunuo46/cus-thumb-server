@@ -24,11 +24,14 @@ public class ThumbnailApi {
     private final ThumbnailService thumbnailService;
 
     @PostMapping
-    @Operation(summary = "썸네일 생성", description = " 클라우드 스토리지에 저장된 비디오URL과 프롬프트를 기반으로 썸네일을 생성합니다.")
-    public ResponseEntity<ThumbnailResponse> createThumbnail(@Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId, @RequestBody CreateThumbnailRequest createThumbnailRequest) {
-        ThumbnailResponse response = thumbnailService.create(userId, createThumbnailRequest);
-        return ResponseEntity.ok(response);
+    @Operation(summary = "썸네일 생성", description = "클라우드 스토리지에 저장된 비디오URL과 프롬프트를 기반으로 여러 썸네일을 생성하고 저장합니다.")
+    public ResponseEntity<List<ThumbnailResponse>> createThumbnail( @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId,
+                                                                    @RequestBody CreateThumbnailRequest createThumbnailRequest
+    ) {
+        List<ThumbnailResponse> responses = thumbnailService.create(userId, createThumbnailRequest);
+        return ResponseEntity.ok(responses);
     }
+
 
     @PostMapping("/edit")
     @Operation(summary = "썸네일 편집", description = "기존 썸네일 URL과 프롬프트를 사용해 새로운 썸네일을 생성합니다.")
