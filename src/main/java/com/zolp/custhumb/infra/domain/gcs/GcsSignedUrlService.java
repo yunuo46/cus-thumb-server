@@ -34,6 +34,9 @@ public class GcsSignedUrlService {
     @Value("${ai.server.thumbnail-generate-url}")
     private String aiServerThumbnailGenerateUrl;
 
+    @Value("${ai.server.thumbnail-edit-url}")
+    private String aiServerThumbnailEditUrl;
+
 
     public GcsSignedUrlService(@Value("${gcp.credentials.path}") Resource keyFile) throws IOException {
         this.storage = StorageOptions.newBuilder()
@@ -94,6 +97,33 @@ public class GcsSignedUrlService {
             return findLatestThumbnailUrl(userId);
         } catch (Exception e) {
             throw new RuntimeException("AI 서버 요청 실패", e);
+        }
+    }
+
+    public String requestThumbnailEditToAiServer(String originalThumbnailUrl, String prompt, String newThumbnailUploadUrl, Long userId) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            Map<String, String> requestBody = Map.of(
+                    "thumbnail_url", originalThumbnailUrl,
+                    "prompt", prompt,
+                    "thumbnail_upload_url", newThumbnailUploadUrl
+            );
+
+            String requestJson = objectMapper.writeValueAsString(requestBody);
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(aiServerThumbnailEditUrl)) // 편집 URL 사용
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestJson))
+                    .build();
+
+            client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            return findLatestThumbnailUrl(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("AI 서버 편집 요청 실패", e);
         }
     }
 

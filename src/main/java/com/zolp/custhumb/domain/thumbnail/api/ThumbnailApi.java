@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/thumbnails")
@@ -28,10 +30,20 @@ public class ThumbnailApi {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{id}/edit")
-    @Operation(summary = "썸네일 편집", description = "기존 썸네일을 편집합니다.")
-    public ResponseEntity<ThumbnailResponse> editThumbnail(@PathVariable Long id, @RequestBody EditThumbnailRequest request) {
-        ThumbnailResponse response = thumbnailService.edit(id, request);
+    @PostMapping("/edit")
+    @Operation(summary = "썸네일 편집", description = "기존 썸네일 URL과 프롬프트를 사용해 새로운 썸네일을 생성합니다.")
+    public ResponseEntity<ThumbnailResponse> editThumbnail(
+            @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId,
+            @RequestBody EditThumbnailRequest request) {
+        ThumbnailResponse response = thumbnailService.edit(userId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    @Operation(summary = "썸네일 목록 조회", description = "인증된 사용자가 생성한 모든 썸네일 목록을 조회합니다.")
+    public ResponseEntity<List<ThumbnailResponse>> getThumbnails(
+            @Parameter(hidden = true, description = "인증된 사용자 ID") @AuthenticationPrincipal Long userId) {
+        List<ThumbnailResponse> response = thumbnailService.getThumbnails(userId);
         return ResponseEntity.ok(response);
     }
 }

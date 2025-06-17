@@ -29,13 +29,13 @@ public class Thumbnail {
     @Column(columnDefinition = "TEXT")
     private String url;
 
-    @ManyToMany(cascade = CascadeType.PERSIST)
-    @JoinTable(
-            name = "thumbnail_thema",
-            joinColumns = @JoinColumn(name = "thumbnail_id"),
-            inverseJoinColumns = @JoinColumn(name = "thema_id")
-    )
-    private List<Thema> themas = new ArrayList<>();
+//    @ManyToMany(cascade = CascadeType.PERSIST)
+//    @JoinTable(
+//            name = "thumbnail_thema",
+//            joinColumns = @JoinColumn(name = "thumbnail_id"),
+//            inverseJoinColumns = @JoinColumn(name = "thema_id")
+//    )
+//    private List<Thema> themas = new ArrayList<>();
 
     @CreationTimestamp
     @Column(updatable = false)
