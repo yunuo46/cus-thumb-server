@@ -28,6 +28,13 @@ public class GcsSignedUrlService {
 
     private final Storage storage;
 
+    @Value("${gcp.storage.bucket-name}")
+    private String gcsBucketName;
+
+    @Value("${ai.server.thumbnail-generate-url}")
+    private String aiServerThumbnailGenerateUrl;
+
+
     public GcsSignedUrlService(@Value("${gcp.credentials.path}") Resource keyFile) throws IOException {
         this.storage = StorageOptions.newBuilder()
                 .setCredentials(ServiceAccountCredentials.fromStream(keyFile.getInputStream()))
@@ -59,21 +66,18 @@ public class GcsSignedUrlService {
         );
     }
 
-    public String requestThumbnailToAiServer(String videoUrl, String videoPrompt, String imageUrl, String imagePrompt, String thumbnailUploadUrl, Long userId) {
+    public String requestThumbnailToAiServer(String videoUrl, String videoPrompt, String thumbnailUploadUrl, String type, Long userId) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
 
             System.out.println(videoUrl);
             System.out.println(videoPrompt);
-            System.out.println(imageUrl);
-            System.out.println(imagePrompt);
             System.out.println(thumbnailUploadUrl);
 
             Map<String, String> requestBody = Map.of(
                     "video_url", videoUrl,
                     "video_prompt", videoPrompt,
-                    "reference_image_url", imageUrl,
-                    "reference_image_prompt", imagePrompt,
+                    "reference_image_type", type,
                     "thumbnail_upload_url", thumbnailUploadUrl
             );
 
@@ -81,12 +85,12 @@ public class GcsSignedUrlService {
 
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("http://203.252.147.202:8100/api/v1.0/generate_thumbnail_prompt"))
+                    .uri(URI.create(aiServerThumbnailGenerateUrl))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                     .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            client.send(request, HttpResponse.BodyHandlers.ofString());
             return findLatestThumbnailUrl(userId);
         } catch (Exception e) {
             throw new RuntimeException("AI 서버 요청 실패", e);
@@ -105,26 +109,16 @@ public class GcsSignedUrlService {
     }
 
     public Map<String, Object> getLatestMediaData(String userId) {
-        List<Blob> videoBlobs = listBlobs("custhumb-bucket", userId + "/video/");
-        List<Blob> imageBlobs = listBlobs("custhumb-bucket", userId + "/image/");
-
+        List<Blob> videoBlobs = listBlobs(gcsBucketName, userId + "/video/");
         String earliestVideo = findEarliestByTimestamp(videoBlobs, "mp4");
-        String earliestImage = findEarliestByTimestamp(imageBlobs, "png");
-
         String videoTimestamp = extractTimestamp(earliestVideo);
-        String imageTimestamp = extractTimestamp(earliestImage);
 
         String videoPromptFile = findMatchingPrompt(videoBlobs, videoTimestamp, "txt");
-        String imagePromptFile = findMatchingPrompt(imageBlobs, imageTimestamp, "txt");
-
-        String videoPrompt = readBlobContent("custhumb-bucket", userId + "/video/" + videoPromptFile);
-        String imagePrompt = readBlobContent("custhumb-bucket", userId + "/image/" + imagePromptFile);
+        String videoPrompt = readBlobContent(gcsBucketName, userId + "/video/" + videoPromptFile);
 
         Map<String, Object> result = new HashMap<>();
         result.put("videoUrl", buildPublicUrl(userId + "/video/" + earliestVideo));
         result.put("videoPrompt", videoPrompt);
-        result.put("imageUrl", buildPublicUrl(userId + "/image/" + earliestImage));
-        result.put("imagePrompt", imagePrompt);
         return result;
     }
 
@@ -164,6 +158,6 @@ public class GcsSignedUrlService {
     }
 
     private String buildPublicUrl(String path) {
-        return "https://storage.googleapis.com/custhumb-bucket/" + path;
+        return String.format("https://storage.googleapis.com/%s/%s", gcsBucketName, path);
     }
 }

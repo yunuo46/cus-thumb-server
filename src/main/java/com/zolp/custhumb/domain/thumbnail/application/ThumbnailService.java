@@ -2,6 +2,7 @@ package com.zolp.custhumb.domain.thumbnail.application;
 
 import com.zolp.custhumb.domain.thumbnail.dao.ThumbnailRepository;
 import com.zolp.custhumb.domain.thumbnail.domain.Thumbnail;
+import com.zolp.custhumb.domain.thumbnail.dto.request.CreateThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.request.EditThumbnailRequest;
 import com.zolp.custhumb.domain.thumbnail.dto.response.ThumbnailResponse;
 import com.zolp.custhumb.domain.user.dao.UserRepository;
@@ -26,7 +27,7 @@ public class ThumbnailService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
     private static final String BUCKET_NAME = "custhumb-bucket";
 
-    public ThumbnailResponse create(Long userId) {
+    public ThumbnailResponse create(Long userId, CreateThumbnailRequest createThumbnailRequest) {
         User user = userRepository.findById(userId).orElseThrow();
 
         String timestamp = LocalDateTime.now().format(FORMATTER);
@@ -38,9 +39,8 @@ public class ThumbnailService {
         String thumbnailUrl = gcsSignedUrlService.requestThumbnailToAiServer(
                 (String) data.get("videoUrl"),
                 (String) data.get("videoPrompt"),
-                (String) data.get("imageUrl"),
-                (String) data.get("imagePrompt"),
                 thumbnailUploadUrl.toString(),
+                createThumbnailRequest.type(),
                 userId
         );
 
