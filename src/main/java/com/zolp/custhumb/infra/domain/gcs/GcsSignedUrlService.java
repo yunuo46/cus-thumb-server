@@ -14,6 +14,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +89,7 @@ public class GcsSignedUrlService {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(aiServerThumbnailGenerateUrl))
                     .header("Content-Type", "application/json")
+                    .timeout(Duration.ofSeconds(1200))
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson))
                     .build();
 
