@@ -1,7 +1,7 @@
 availableSecrets:
   secretManager:
-#    - versionName: projects/782806232816/secrets/APPLICATION/versions/latest
-#      env: SECRET_ENV_LOCAL
+    - versionName: projects/782806232816/secrets/APPLICATION/versions/latest
+      env: SECRET_ENV_LOCAL
     - versionName: projects/782806232816/secrets/APPLICATION-REMOTE/versions/latest
       env: SECRET_ENV_REMOTE
     - versionName: projects/782806232816/secrets/GCS-KEY/versions/latest
@@ -78,5 +78,5 @@ options:
   machineType: E2_HIGHCPU_8
 
 images:
-#  - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
+  - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
   - 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-remote'
