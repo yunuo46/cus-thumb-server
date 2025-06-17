@@ -82,6 +82,8 @@ public class GcsSignedUrlService {
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
 
+            System.out.println("생성된 AI 서버 요청 JSON 본문: " + requestJson);
+
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(aiServerThumbnailGenerateUrl))
@@ -91,6 +93,7 @@ public class GcsSignedUrlService {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println("AI 서버 응답 상태 코드: " + response.statusCode());
+            System.out.println("AI 서버 응답 바디: " + response.body() );
 
             return findLatestThreeThumbnailUrls(userId);
         } catch (Exception e) {
