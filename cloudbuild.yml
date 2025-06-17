@@ -8,37 +8,37 @@ availableSecrets:
       env: SECRET_ENV_KEY
 
 steps:
-#  # 🔹 1. LOCAL 서비스용 secret 파일 생성 + 빌드 + 배포
-#  - name: 'ubuntu'
-#    entrypoint: 'bash'
-#    args:
-#      - '-c'
-#      - |
-#        echo "$$SECRET_ENV_LOCAL" > src/main/resources/secret.yml
-#        echo "$$SECRET_ENV_KEY" > src/main/resources/custhumb.json
-#    secretEnv: ['SECRET_ENV_LOCAL','SECRET_ENV_KEY']
-#
-#  - name: gradle:8.5-jdk21
-#    args: [ 'gradle','build' ]
-#
-#  - name: 'gcr.io/cloud-builders/docker'
-#    args: ['build', '-t',
-#           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local',
-#           '.']
-#
-#  - name: 'gcr.io/cloud-builders/docker'
-#    args: ['push',
-#           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local']
-#
-#  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-#    entrypoint: gcloud
-#    args:
-#      [
-#        'compute', 'instances', 'update-container',
-#        'custhumb-local-instance',
-#        '--zone', 'asia-northeast3-c',
-#        '--container-image', 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
-#      ]
+  # 🔹 1. LOCAL 서비스용 secret 파일 생성 + 빌드 + 배포
+  - name: 'ubuntu'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "$$SECRET_ENV_LOCAL" > src/main/resources/secret.yml
+        echo "$$SECRET_ENV_KEY" > src/main/resources/custhumb.json
+    secretEnv: ['SECRET_ENV_LOCAL','SECRET_ENV_KEY']
+
+  - name: gradle:8.5-jdk21
+    args: [ 'gradle','build' ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t',
+           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local',
+           '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push',
+           'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local']
+
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      [
+        'compute', 'instances', 'update-container',
+        'custhumb-local-instance',
+        '--zone', 'asia-northeast3-c',
+        '--container-image', 'asia-northeast3-docker.pkg.dev/custhumb/custhumb-registry/custhumb-local'
+      ]
 
   # 🔹 2. REMOTE 서비스용 secret 파일 생성 + 빌드 + 배포
   - name: 'ubuntu'
