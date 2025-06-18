@@ -78,7 +78,7 @@ public class ThumbnailService {
             System.out.println("생성 및 저장될 썸네일 URL: " + url); // Log each URL
 
             Thumbnail saved = thumbnailRepository.save(thumbnail);
-            responses.add(new ThumbnailResponse(saved.getId(), saved.getUrl()));
+            responses.add(new ThumbnailResponse(saved.getId(), saved.getUrl(),saved.getCreatedAt()));
         }
         return responses;
     }
@@ -115,14 +115,14 @@ public class ThumbnailService {
                 .build();
 
         Thumbnail saved = thumbnailRepository.save(editedThumbnail);
-        return new ThumbnailResponse(saved.getId(), saved.getUrl());
+        return new ThumbnailResponse(saved.getId(), saved.getUrl(),saved.getCreatedAt());
     }
 
     public List<ThumbnailResponse> getThumbnails(Long userId) {
         List<Thumbnail> thumbnails = thumbnailRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
 
         return thumbnails.stream()
-                .map(thumbnail -> new ThumbnailResponse(thumbnail.getId(), thumbnail.getUrl()))
+                .map(thumbnail -> new ThumbnailResponse(thumbnail.getId(), thumbnail.getUrl(),thumbnail.getCreatedAt()))
                 .collect(Collectors.toList());
     }
 }
