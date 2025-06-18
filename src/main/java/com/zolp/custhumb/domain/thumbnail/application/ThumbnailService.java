@@ -96,7 +96,8 @@ public class ThumbnailService {
                 "image/png",
                 15,
                 userId,
-                timestamp
+                timestamp,
+                0
         );
 
         String newThumbnailUrl = gcsSignedUrlService.requestThumbnailEditToAiServer(
