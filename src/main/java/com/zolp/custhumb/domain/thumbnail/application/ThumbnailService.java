@@ -41,17 +41,17 @@ public class ThumbnailService {
 
         List<String> thumbnailUploadUrls = new ArrayList<>();
 
-        for (int i = 0; i < numberOfThumbnailsToGenerate; i++) {
-            // 각 썸네일마다 고유한 이름을 주기 위해 인덱스를 포함
-            String objectName = String.format("thumbnail/%d/thumbnail__%s_%d.png", userId, baseTimestamp, i);
+        for (int idx = 0; idx < numberOfThumbnailsToGenerate; idx++) {
+            String thumbnailObject = "thumbnail/" + ".png";
 
             URL uploadUrl = gcsSignedUrlService.generateUploadUrl(
                     gcsBucketName,
-                    objectName,
+                    thumbnailObject,
                     "image/png",
                     15,
                     userId,
-                    baseTimestamp
+                    baseTimestamp,
+                    idx
             );
             thumbnailUploadUrls.add(uploadUrl.toString());
         }

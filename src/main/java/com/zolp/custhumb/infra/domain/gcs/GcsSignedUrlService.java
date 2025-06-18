@@ -46,12 +46,12 @@ public class GcsSignedUrlService {
                 .getService();
     }
 
-    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes, Long userId, String timestamp) {
+    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes, Long userId, String timestamp, Long idx) {
         String[] parts = objectName.split("/", 2);
         String type = parts[0];
         String fileName = parts.length > 1 ? parts[1] : "unknown";
 
-        String fullPath = String.format("%d/%s/%s__%s", userId, type, timestamp, fileName);
+        String fullPath = String.format("%d/%s/%s__%d_%s", userId, type, timestamp, idx, fileName);
 
         BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, fullPath))
                 .setContentType(contentType)
@@ -79,7 +79,6 @@ public class GcsSignedUrlService {
             requestBody.put("video_prompt", videoPrompt);
             requestBody.put("reference_image_types", referenceImageTypes);
             requestBody.put("thumbnail_upload_urls", thumbnailUploadUrls);
-
 
             String requestJson = objectMapper.writeValueAsString(requestBody);
 
