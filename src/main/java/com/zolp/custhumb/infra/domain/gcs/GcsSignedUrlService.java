@@ -46,7 +46,7 @@ public class GcsSignedUrlService {
                 .getService();
     }
 
-    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes, Long userId, String timestamp, Long idx) {
+    public URL generateUploadUrl(String bucketName, String objectName, String contentType, int expireMinutes, Long userId, String timestamp, int idx) {
         String[] parts = objectName.split("/", 2);
         String type = parts[0];
         String fileName = parts.length > 1 ? parts[1] : "unknown";

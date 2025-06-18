@@ -41,7 +41,7 @@ public class ThumbnailService {
 
         List<String> thumbnailUploadUrls = new ArrayList<>();
 
-        for (int idx = 0; idx < numberOfThumbnailsToGenerate; idx++) {
+        for (int idx = 0L; idx < numberOfThumbnailsToGenerate; idx++) {
             String thumbnailObject = "thumbnail/" + ".png";
 
             URL uploadUrl = gcsSignedUrlService.generateUploadUrl(
