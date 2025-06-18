@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +38,7 @@ public class ThumbnailService {
     public List<ThumbnailResponse> create(Long userId, CreateThumbnailRequest createThumbnailRequest) {
         User user = userRepository.findById(userId).orElseThrow();
 
-        String baseTimestamp = LocalDateTime.now().format(FORMATTER);
+        String baseTimestamp = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).format(FORMATTER);
         int numberOfThumbnailsToGenerate = createThumbnailRequest.types().size();
 
         List<String> thumbnailUploadUrls = new ArrayList<>();
@@ -87,7 +89,7 @@ public class ThumbnailService {
 
         String url = thumbnailRepository.findById(request.id()).orElseThrow().getUrl();
 
-        String timestamp = LocalDateTime.now().format(FORMATTER);
+        String baseTimestamp = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).format(FORMATTER);
         String thumbnailObject = "thumbnail/" + ".png";
 
         URL newThumbnailUploadUrl = gcsSignedUrlService.generateUploadUrl(
@@ -96,7 +98,7 @@ public class ThumbnailService {
                 "image/png",
                 15,
                 userId,
-                timestamp,
+                baseTimestamp,
                 0
         );
 
