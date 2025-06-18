@@ -5,26 +5,88 @@
     <title>Presigned URL 테스트</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <style>
+        body { padding: 20px; }
+        .container { max-width: 960px; }
+        .form-group { margin-bottom: 20px; }
+        textarea { resize: vertical; }
+        .thumbnail-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .thumbnail-item {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .thumbnail-item.selected {
+            border: 2px solid #007bff;
+        }
+        .thumbnail-item img {
+            width: 150px;
+            height: 100px;
+            object-fit: cover;
+        }
+        .thumbnail-item p {
+            margin-top: 5px;
+            font-size: 0.8em;
+            word-break: break-all;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
     <h1>Google OAuth 로그인</h1>
+    <p id="loginStatus">로그인 필요</p>
     <button id="google-login" class="btn btn-primary">Google 로그인</button>
 
     <hr>
 
     <h2>🖼️ 썸네일 생성</h2>
+    <div class="form-group">
+        <label>생성할 썸네일 타입 선택:</label><br>
+        <label class="checkbox-inline"><input type="checkbox" name="thumbnailType" value="cartoon"> Cartoon</label>
+        <label class="checkbox-inline"><input type="checkbox" name="thumbnailType" value="anime"> Anime</label>
+        <label class="checkbox-inline"><input type="checkbox" name="thumbnailType" value="realistic"> Realistic</label>
+        <label class="checkbox-inline"><input type="checkbox" name="thumbnailType" value="oil_painting"> Oil Painting</label>
+        <label class="checkbox-inline"><input type="checkbox" name="thumbnailType" value="sketch"> Sketch</label>
+    </div>
     <button id="createThumbnailBtn" class="btn btn-warning">썸네일 생성 요청</button>
 
     <hr>
 
-    <h2>📤 Presigned URL 테스트</h2>
+    <h2>✨ 썸네일 편집</h2>
+    <div class="form-group">
+        <label>편집할 썸네일 선택 (아래 목록에서 클릭)</label><br>
+        <input type="hidden" id="selectedThumbnailId">
+        <input type="text" id="selectedThumbnailUrl" class="form-control" placeholder="선택된 썸네일 URL" readonly>
+    </div>
+    <div class="form-group">
+        <label>새로운 프롬프트 입력:</label>
+        <textarea id="editPrompt" class="form-control" placeholder="새로운 썸네일을 위한 프롬프트를 입력하세요."></textarea>
+    </div>
+    <button id="editThumbnailBtn" class="btn btn-info">썸네일 편집 요청</button>
+
+    <hr>
+
+    <h2>📋 썸네일 목록</h2>
+    <button id="getThumbnailsBtn" class="btn btn-default">썸네일 목록 불러오기</button>
+    <div id="thumbnailList" class="thumbnail-container">
+        <p id="noThumbnailsMessage" style="display: none;">생성된 썸네일이 없습니다.</p>
+    </div>
+
+    <hr>
+
+    <h2>📤 Presigned URL 테스트 (영상/이미지 업로드)</h2>
 
     <div class="form-group">
         <label>파일 선택 (Video)</label>
         <input type="file" id="videoFile" accept="video/*" class="form-control">
         <label>프롬프트 입력</label>
-        <textarea id="videoPrompt" class="form-control" placeholder="텍스트 설명 입력"></textarea>
+        <textarea id="videoPrompt" class="form-control" placeholder="비디오에 대한 텍스트 설명을 입력하세요."></textarea>
         <button id="uploadVideoBtn" class="btn btn-success">영상 + 텍스트 업로드</button>
     </div>
 
@@ -32,42 +94,57 @@
         <label>파일 선택 (Image)</label>
         <input type="file" id="imageFile" accept="image/*" class="form-control">
         <label>프롬프트 입력</label>
-        <textarea id="imagePrompt" class="form-control" placeholder="텍스트 설명 입력"></textarea>
+        <textarea id="imagePrompt" class="form-control" placeholder="이미지에 대한 텍스트 설명을 입력하세요."></textarea>
         <button id="uploadImageBtn" class="btn btn-success">이미지 + 텍스트 업로드</button>
     </div>
 
 </div>
 
 <script>
+    const API_BASE_URL = "/api"; // API 기본 경로
+
     window.onload = function () {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
 
         if (code) {
+            // OAuth 콜백으로 받은 코드로 accessToken 요청
             $.ajax({
-                url: "/api/auth/google",
+                url: `${API_BASE_URL}/auth/google`,
                 method: "POST",
                 contentType: "application/json",
                 data: JSON.stringify({ authorizationCode: code }),
                 success: function (data) {
                     if (data.accessToken) {
                         localStorage.setItem("accessToken", "Bearer " + data.accessToken);
-                        alert("로그인 성공! accessToken 저장 완료.");
-                        window.history.replaceState({}, document.title, "/");
+                        alert("로그인 성공! accessToken이 저장되었습니다.");
+                        $("#loginStatus").text("로그인됨 ✅");
+                        // URL에서 코드 제거 (새로고침 시 재로그인 방지)
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        // 로그인 성공 후 썸네일 목록 자동 로드
+                        getThumbnails();
                     } else {
                         alert("accessToken이 없습니다.");
                     }
                 },
-                error: function () {
-                    alert("accessToken 요청 실패");
+                error: function (xhr) {
+                    console.error("accessToken 요청 실패:", xhr);
+                    alert("로그인 실패: " + (xhr.responseJSON?.message || xhr.statusText));
                 }
             });
+        } else {
+            // 페이지 로드 시 기존 accessToken 확인
+            if (getAccessToken()) {
+                $("#loginStatus").text("로그인됨 ✅");
+                getThumbnails(); // accessToken이 있으면 썸네일 목록 자동 로드
+            }
         }
     };
 
     $('#google-login').click(function () {
+        // Google OAuth 클라이언트 ID는 본인의 것으로 대체해야 합니다.
         const clientId = '782806232816-4n74niupirb3c6cdarr0gthv2ulnp059.apps.googleusercontent.com';
-        const redirectUri = encodeURIComponent('http://localhost:8080/oauth/google/callback');
+        const redirectUri = encodeURIComponent('http://localhost:8080/oauth/google/callback'); // 실제 리다이렉트 URI
         const scope = encodeURIComponent('openid profile email');
         const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
         window.location.href = authUrl;
@@ -77,136 +154,201 @@
         return localStorage.getItem("accessToken");
     }
 
-    function uploadVideoWithText(file, prompt) {
+    // 파일 업로드 (영상/이미지)
+    function uploadFileWithText(file, prompt, type) {
         const token = getAccessToken();
+        if (!token) {
+            alert("accessToken이 없습니다. 먼저 로그인하세요.");
+            return;
+        }
         if (!file || !prompt) {
             alert("파일과 프롬프트 모두 입력하세요.");
             return;
         }
 
         const fileName = encodeURIComponent(file.name);
+        const uploadApiUrl = `${API_BASE_URL}/upload/${type}?fileName=${fileName}`;
+        const contentType = (type === 'video') ? 'video/mp4' : 'image/png'; // 예시. 실제 파일 타입에 따라 조절
 
         $.ajax({
-            url: `/api/upload/video?fileName=${fileName}`,
+            url: uploadApiUrl,
             type: 'GET',
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Authorization", token);
             },
             success: function (res) {
-                const videoUrl = res.mediaUrl;
+                const mediaUrl = res.mediaUrl;
                 const textUrl = res.textUrl;
 
-                // Step 1. 영상 업로드
-                fetch(videoUrl, {
+                // Step 1. 미디어 파일 업로드
+                fetch(mediaUrl, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'video/mp4' },
+                    headers: { 'Content-Type': contentType },
                     body: file
-                }).then(vRes => {
-                    if (!vRes.ok) throw new Error("영상 업로드 실패");
-                    // Step 2. 텍스트 업로드
+                }).then(mediaRes => {
+                    if (!mediaRes.ok) throw new Error(`${type} 업로드 실패: ${mediaRes.status}`);
+                    // Step 2. 텍스트 파일 업로드
                     return fetch(textUrl, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'text/plain' },
                         body: new Blob([prompt], { type: 'text/plain' })
                     });
-                }).then(tRes => {
-                    if (tRes.ok) {
-                        alert("영상 + 텍스트 업로드 성공!");
+                }).then(textRes => {
+                    if (textRes.ok) {
+                        alert(`${type} + 텍스트 업로드 성공!`);
                     } else {
-                        alert("텍스트 업로드 실패");
+                        alert(`텍스트 업로드 실패: ${textRes.status}`);
                     }
                 }).catch(err => {
-                    console.error(err);
-                    alert("업로드 중 오류 발생");
+                    console.error(`업로드 중 오류 발생 (${type}):`, err);
+                    alert(`업로드 중 오류 발생 (${type}): ${err.message || err}`);
                 });
             },
-            error: function () {
-                alert("Presigned URL 발급 실패");
+            error: function (xhr) {
+                console.error(`Presigned URL 발급 실패 (${type}):`, xhr);
+                alert(`Presigned URL 발급 실패 (${type}): ${xhr.responseJSON?.message || xhr.statusText}`);
             }
         });
     }
-
-    function uploadImageWithText(file, prompt) {
-        const token = getAccessToken();
-        if (!file || !prompt) {
-            alert("파일과 프롬프트 모두 입력하세요.");
-            return;
-        }
-
-        const fileName = encodeURIComponent(file.name);
-        $.ajax({
-            url: `/api/upload/image?fileName=${fileName}`,
-            type: 'GET',
-            beforeSend: function (xhr) {
-                console.log("🚀 Authorization header:", token);
-                xhr.setRequestHeader("Authorization", token);
-            },
-            success: function (res) {
-                const imageUrl = res.mediaUrl;
-                const textUrl = res.textUrl;
-
-                fetch(imageUrl, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'image/png' },
-                    body: file
-                }).then(iRes => {
-                    if (!iRes.ok) throw new Error("이미지 업로드 실패");
-                    return fetch(textUrl, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: new Blob([prompt], { type: 'text/plain' })
-                    });
-                }).then(tRes => {
-                    if (tRes.ok) {
-                        alert("이미지 + 텍스트 업로드 성공!");
-                    } else {
-                        alert("텍스트 업로드 실패");
-                    }
-                }).catch(err => {
-                    console.error(err);
-                    alert("업로드 중 오류 발생");
-                });
-            },
-            error: function () {
-                alert("Presigned URL 발급 실패");
-            }
-        });
-    }
-
 
     $('#uploadVideoBtn').click(() => {
         const file = document.getElementById('videoFile').files[0];
         const prompt = document.getElementById('videoPrompt').value.trim();
-        uploadVideoWithText(file, prompt);
+        uploadFileWithText(file, prompt, 'video');
     });
 
     $('#uploadImageBtn').click(() => {
         const file = document.getElementById('imageFile').files[0];
         const prompt = document.getElementById('imagePrompt').value.trim();
-        uploadImageWithText(file, prompt);
+        uploadFileWithText(file, prompt, 'image');
     });
 
+    // 썸네일 생성 요청
     $('#createThumbnailBtn').click(() => {
         const token = getAccessToken();
+        if (!token) {
+            alert("accessToken이 없습니다. 먼저 로그인하세요.");
+            return;
+        }
 
+        const selectedTypes = Array.from(document.querySelectorAll('input[name="thumbnailType"]:checked'))
+            .map(cb => cb.value);
+
+        if (selectedTypes.length === 0) {
+            alert("생성할 썸네일 타입을 하나 이상 선택하세요.");
+            return;
+        }
+
+        $.ajax({
+            url: `${API_BASE_URL}/thumbnails`,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ types: selectedTypes }),
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            },
+            success: function (res) {
+                console.log("썸네일 생성 결과:", res);
+                alert("썸네일 생성 성공! 목록을 새로고침합니다.");
+                getThumbnails(); // 생성 후 목록 자동 업데이트
+            },
+            error: function (xhr) {
+                console.error("썸네일 생성 실패:", xhr);
+                alert("썸네일 생성 실패: " + (xhr.responseJSON?.message || xhr.statusText));
+            }
+        });
+    });
+
+    // 썸네일 목록 조회
+    $('#getThumbnailsBtn').click(getThumbnails);
+
+    function getThumbnails() {
+        const token = getAccessToken();
         if (!token) {
             alert("accessToken이 없습니다. 먼저 로그인하세요.");
             return;
         }
 
         $.ajax({
-            url: "/api/thumbnails",
-            method: "POST",
+            url: `${API_BASE_URL}/thumbnails`,
+            method: "GET",
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Authorization", token);
             },
             success: function (res) {
-                console.log("썸네일 생성 결과:", res);
-                alert("썸네일 생성 성공!");
+                console.log("썸네일 목록:", res);
+                displayThumbnails(res);
             },
-            error: function (err) {
-                console.error(err);
-                alert("썸네일 생성 실패: " + (err.responseJSON?.message || err.statusText));
+            error: function (xhr) {
+                console.error("썸네일 목록 조회 실패:", xhr);
+                alert("썸네일 목록 조회 실패: " + (xhr.responseJSON?.message || xhr.statusText));
+            }
+        });
+    }
+
+    function displayThumbnails(thumbnails) {
+        const $thumbnailList = $('#thumbnailList');
+        $thumbnailList.empty(); // 기존 목록 비우기
+
+        if (thumbnails && thumbnails.length > 0) {
+            $('#noThumbnailsMessage').hide();
+            thumbnails.forEach(thumb => {
+                const $thumbItem = $(`<div class="thumbnail-item" data-id="${thumb.id}" data-url="${thumb.url}">
+                    <img src="${thumb.url}" alt="Thumbnail">
+                    <p>${thumb.url.split('/').pop()}</p>
+                </div>`);
+                $thumbItem.click(function() {
+                    $('.thumbnail-item').removeClass('selected');
+                    $(this).addClass('selected');
+                    $('#selectedThumbnailId').val(thumb.id);
+                    $('#selectedThumbnailUrl').val(thumb.url);
+                });
+                $thumbnailList.append($thumbItem);
+            });
+        } else {
+            $('#noThumbnailsMessage').show();
+        }
+    }
+
+    // 썸네일 편집 요청
+    $('#editThumbnailBtn').click(() => {
+        const token = getAccessToken();
+        if (!token) {
+            alert("accessToken이 없습니다. 먼저 로그인하세요.");
+            return;
+        }
+
+        const thumbnailId = $('#selectedThumbnailId').val();
+        const prompt = $('#editPrompt').val().trim();
+
+        if (!thumbnailId) {
+            alert("편집할 썸네일을 목록에서 선택해주세요.");
+            return;
+        }
+        if (!prompt) {
+            alert("새로운 썸네일 생성을 위한 프롬프트를 입력하세요.");
+            return;
+        }
+
+        $.ajax({
+            url: `${API_BASE_URL}/thumbnails/edit`,
+            method: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ id: thumbnailId, prompt: prompt }),
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader("Authorization", token);
+            },
+            success: function (res) {
+                console.log("썸네일 편집 결과:", res);
+                alert("썸네일 편집 성공! 목록을 새로고침합니다.");
+                $('#selectedThumbnailId').val(''); // 선택 초기화
+                $('#selectedThumbnailUrl').val('');
+                $('#editPrompt').val('');
+                getThumbnails(); // 편집 후 목록 자동 업데이트
+            },
+            error: function (xhr) {
+                console.error("썸네일 편집 실패:", xhr);
+                alert("썸네일 편집 실패: " + (xhr.responseJSON?.message || xhr.statusText));
             }
         });
     });

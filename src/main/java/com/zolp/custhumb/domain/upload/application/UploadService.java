@@ -24,8 +24,8 @@ public class UploadService {
         String videoObject = "video/" + baseName + ".mp4";
         String textObject = "video/" + baseName + ".txt";
 
-        URL videoUrl = gcsSignedUrlService.generateUploadUrl(bucket, videoObject, "video/mp4", 15, userId, timestamp);
-        URL textUrl = gcsSignedUrlService.generateUploadUrl(bucket, textObject, "text/plain", 5, userId, timestamp);
+        URL videoUrl = gcsSignedUrlService.generateUploadUrl(bucket, videoObject, "video/mp4", 15, userId, timestamp, 0);
+        URL textUrl = gcsSignedUrlService.generateUploadUrl(bucket, textObject, "text/plain", 5, userId, timestamp, 0);
 
         return new UploadResponse(videoUrl.toString(), textUrl.toString());
     }
@@ -37,8 +37,8 @@ public class UploadService {
         String imageObject = "image/" + baseName + ".png";
         String textObject = "image/" + baseName + ".txt";
 
-        URL imageUrl = gcsSignedUrlService.generateUploadUrl(bucket, imageObject, "image/png", 5, userId, timestamp);
-        URL textUrl = gcsSignedUrlService.generateUploadUrl(bucket, textObject, "text/plain", 5, userId, timestamp);
+        URL imageUrl = gcsSignedUrlService.generateUploadUrl(bucket, imageObject, "image/png", 5, userId, timestamp, 0);
+        URL textUrl = gcsSignedUrlService.generateUploadUrl(bucket, textObject, "text/plain", 5, userId, timestamp, 0);
 
         return new UploadResponse(imageUrl.toString(), textUrl.toString());
     }
