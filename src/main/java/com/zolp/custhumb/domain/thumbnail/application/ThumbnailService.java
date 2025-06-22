@@ -102,10 +102,13 @@ public class ThumbnailService {
                 0
         );
 
+        String maskingUrl = gcsSignedUrlService.findLatestMaskingUrl(userId);
+
         String newThumbnailUrl = gcsSignedUrlService.requestThumbnailEditToAiServer(
                 url,
                 request.prompt(),
                 newThumbnailUploadUrl.toString(),
+                maskingUrl,
                 userId
         );
 

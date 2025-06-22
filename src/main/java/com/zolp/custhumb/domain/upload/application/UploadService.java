@@ -45,6 +45,17 @@ public class UploadService {
         return new UploadResponse(imageUrl.toString(), textUrl.toString());
     }
 
+    public String generateMaskingUrl(Long userId, String fileName, String bucket) {
+        String baseTimestamp = ZonedDateTime.now(ZoneId.of("Asia/Seoul")).format(FORMATTER);
+        String baseName = getBaseName(fileName);
+
+        String maskingObject = "masking/" + baseName + ".png";
+
+        URL maskingImageUrl = gcsSignedUrlService.generateUploadUrl(bucket, maskingObject, "image/png", 5, userId, baseTimestamp, 0);
+
+        return maskingImageUrl.toString();
+    }
+
     private String getBaseName(String fileName) {
         return fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
     }

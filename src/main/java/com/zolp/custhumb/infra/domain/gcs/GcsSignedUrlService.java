@@ -103,13 +103,14 @@ public class GcsSignedUrlService {
     }
 
 
-    public String requestThumbnailEditToAiServer(String originalThumbnailUrl, String prompt, String newThumbnailUploadUrl, Long userId) {
+    public String requestThumbnailEditToAiServer(String originalThumbnailUrl, String prompt, String newThumbnailUploadUrl, String maskingUrl, Long userId) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
 
             Map<String, String> requestBody = Map.of(
                     "thumbnail_url", originalThumbnailUrl,
                     "prompt", prompt,
+                    "mask_url", maskingUrl,
                     "upload_url", newThumbnailUploadUrl
             );
 
@@ -156,6 +157,17 @@ public class GcsSignedUrlService {
                 .max(Comparator.comparing(blob -> extractTimestamp(blob.getName())))
                 .map(blob -> buildPublicUrl(blob.getName()))
                 .orElseThrow(() -> new RuntimeException("썸네일 PNG 파일이 없습니다."));
+    }
+
+    public String findLatestMaskingUrl(Long userId) {
+        String prefix = userId.toString() + "/masking/";
+        List<Blob> blobs = listBlobs(gcsBucketName, prefix);
+
+        return blobs.stream()
+                .filter(blob -> blob.getName().endsWith(".png"))
+                .max(Comparator.comparing(blob -> extractTimestamp(blob.getName())))
+                .map(blob -> buildPublicUrl(blob.getName()))
+                .orElseThrow(() -> new RuntimeException("마스킹 PNG 파일이 없습니다."));
     }
 
     public Map<String, Object> getLatestMediaData(String userId) {

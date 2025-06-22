@@ -34,4 +34,10 @@ public class UploadApi {
         UploadResponse response = uploadService.generateImageAndTextUrls(userId, fileName, BUCKET_NAME);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/masking")
+    public ResponseEntity<String> getMaskingPresignedUrl(@AuthenticationPrincipal Long userId, @RequestParam String fileName) {
+        String response = uploadService.generateMaskingUrl(userId, fileName, BUCKET_NAME);
+        return ResponseEntity.ok(response);
+    }
 }
